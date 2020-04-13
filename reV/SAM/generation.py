@@ -367,7 +367,6 @@ class Solar(Generation):
         if drop_leap:
             resource = self.drop_leap(resource)
 
-        parameters = self.set_latitude_tilt_az(parameters, meta)
         meta = self.tz_check(parameters, meta)
 
         # don't pass resource to base class, set in set_nsrdb instead.
@@ -382,6 +381,7 @@ class Solar(Generation):
         if resource is not None and meta is not None:
             self.set_nsrdb(resource)
 
+    # pylint: disable=R0201
     def set_latitude_tilt_az(self, parameters, meta):
         """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
 
@@ -402,16 +402,15 @@ class Solar(Generation):
         """
 
         set_tilt = False
-        if 'pv' in self.MODULE:
-            if parameters is not None and meta is not None:
-                if 'tilt' not in parameters:
-                    warn('No tilt specified, setting at latitude.',
-                         SAMInputWarning)
+        if parameters is not None and meta is not None:
+            if 'tilt' not in parameters:
+                warn('No tilt specified, setting at latitude.',
+                     SAMInputWarning)
+                set_tilt = True
+            else:
+                if (parameters['tilt'] == 'lat'
+                        or parameters['tilt'] == 'latitude'):
                     set_tilt = True
-                else:
-                    if (parameters['tilt'] == 'lat'
-                            or parameters['tilt'] == 'latitude'):
-                        set_tilt = True
 
         if set_tilt:
             # set tilt to abs(latitude)
@@ -511,6 +510,7 @@ class PV(Solar):
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         """
+        parameters = self.set_latitude_tilt_az(parameters, meta)
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
@@ -766,6 +766,7 @@ class SolarWaterHeat(SolarThermal):
             2nd, etc.
         """
         self._pysam_weather_tag = 'solar_resource_file'
+        parameters = self.set_latitude_tilt_az(parameters, meta)
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request, drop_leap=drop_leap)
 

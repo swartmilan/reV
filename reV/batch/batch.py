@@ -74,6 +74,11 @@ class BatchJob:
 
         # iterate through batch sets
         for s in config['sets']:
+            if s.get('skip', 'false').lower() == 'true':
+                msg = 'Skipping batch set {}'.format(s.get('set_tag'))
+                logger.info(msg)
+                print(msg)
+                continue
 
             # iterate through combinations of arg values
             for comb in itertools.product(*list(s['args'].values())):
