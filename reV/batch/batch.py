@@ -284,7 +284,8 @@ class BatchJob:
         """Copy job files from the batch config dir into sub job dirs."""
 
         # walk through current directory getting everything to copy
-        for dirpath, _, filenames in os.walk(self._base_dir):
+        for dirpath, dirs, filenames in os.walk(self._base_dir):
+            dirs[:] = [d for d in dirs if d[-4:] != '.git']
 
             # do make additional copies of job sub directories.
             skip = any([job_tag in dirpath for job_tag in self.job_tags])

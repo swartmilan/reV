@@ -488,8 +488,8 @@ class ProjectPoints:
             elif config in sam_configs:
                 configs[config] = sam_configs[config]
             else:
-                raise ConfigError('{} does not map to a valid configuration '
-                                  'file'.format(config))
+                raise ConfigError('"{}" does not map to the available config'
+                                  'files: {}'.format(config, sam_configs))
 
         if configs != sam_configs:
             self._sam_config_obj = SAMConfig(configs)
