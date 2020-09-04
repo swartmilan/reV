@@ -179,7 +179,7 @@ class SummarizeH5:
 
                     summary = pd.concat(summary)
 
-            summary.index.name = 'gid'
+            summary.index.name = 'res_gid'
 
         else:
             summary = self._compute_ds_summary(self.h5_file, ds_name,
@@ -206,10 +206,8 @@ class SummarizeH5:
         """
         with Resource(self.h5_file, group=self._group) as f:
             meta = f.meta
-            if 'gid' not in meta:
-                if meta.index.name != 'gid':
-                    meta.index.name = 'gid'
-
+            if 'res_gid' not in meta:
+                meta.index.name = 'res_gid'
                 meta = meta.reset_index()
 
             for ds_name in f.datasets:

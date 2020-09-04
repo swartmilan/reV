@@ -196,7 +196,8 @@ class DatasetCollector:
         return site_slice
 
     def _get_source_gid_chunks(self, f_source):
-        """Split the gids from the f_source into chunks based on memory req.
+        """
+        Split the res_gids from the f_source into chunks based on memory req.
 
         Parameters
         ----------
@@ -211,7 +212,7 @@ class DatasetCollector:
             List of source gid chunks to collect.
         """
 
-        all_source_gids = f_source.get_meta_arr('gid')
+        all_source_gids = f_source.get_meta_arr('res_gid')
         mem_req = (len(all_source_gids) * self._site_mem_req)
 
         if mem_req > self._mem_avail:
@@ -411,15 +412,15 @@ class Collector:
 
         Returns
         -------
-        gids : list
+        res_gids : list
             List of resource gids that are to be collected
         """
         if isinstance(project_points, str):
-            gids = pd.read_csv(project_points)['gid'].values
+            res_gids = pd.read_csv(project_points)['res_gid'].values
         elif isinstance(project_points, pd.DataFrame):
-            gids = project_points['gid'].values
+            res_gids = project_points['res_gid'].values
         elif isinstance(project_points, list):
-            gids = project_points
+            res_gids = project_points
         elif isinstance(project_points, slice):
             s = project_points.start
             if s is None:
@@ -435,13 +436,15 @@ class Collector:
             if step is None:
                 step = 1
 
-            gids = list(range(s, e, step))
+            res_gids = list(range(s, e, step))
         else:
             m = 'Cannot parse project_points'
             logger.error(m)
             raise CollectionValueError(m)
-        gids = sorted([int(g) for g in gids])
-        return gids
+
+        res_gids = sorted([int(gid) for gid in res_gids])
+
+        return res_gids
 
     @staticmethod
     def parse_gids_from_files(h5_files):
@@ -455,15 +458,16 @@ class Collector:
 
         Returns
         -------
-        gids : list
+        res_gids : list
             List of sorted resource gids to be collected.
         """
 
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
         meta = pd.concat(meta, axis=0)
-        gids = list(set(meta['gid'].values.tolist()))
-        gids = sorted([int(g) for g in gids])
-        return gids
+        res_gids = list(set(meta['res_gid'].values.tolist()))
+        res_gids = sorted([int(gid) for gid in res_gids])
+
+        return res_gids
 
     def get_dset_shape(self, dset_name):
         """
@@ -540,12 +544,12 @@ class Collector:
             DataFrame of combined meta from all files in self._h5_files.
             Duplicate GIDs are dropped and a warning is raised.
         """
-        meta_gids = meta['gid'].values
+        meta_gids = meta['res_gid'].values
         gids = np.array(self.gids)
         missing = gids[~np.in1d(gids, meta_gids)]
         if any(missing):
             # TODO: Write missing gids to disk to allow for automated re-run
-            m = "gids: {} are missing".format(missing)
+            m = "res_gids: {} are missing".format(missing)
             logger.error(m)
             raise CollectionRuntimeError(m)
 
@@ -555,9 +559,9 @@ class Collector:
                  .format(len(meta), len(set(meta_gids)), self.h5_files))
             logger.warning(m)
             warn(m, CollectionWarning)
-            meta = meta.drop_duplicates(subset='gid', keep='last')
+            meta = meta.drop_duplicates(subset='res_gid', keep='last')
 
-        meta = meta.sort_values('gid')
+        meta = meta.sort_values('res_gid')
         meta = meta.reset_index(drop=True)
 
         return meta

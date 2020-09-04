@@ -194,7 +194,7 @@ class Economic(RevPySam):
         with Outputs(cf_file) as cfh:
 
             # get the index location of the site in question
-            site_gids = list(cfh.meta['gid'])
+            site_gids = list(cfh.meta['res_gid'])
             isite = site_gids.index(site)
 
             # look for the cf_profile dataset
@@ -364,7 +364,7 @@ class LCOE(Economic):
 
         # get the cf_file meta data gid's to use as indexing tools
         with Outputs(cf_file) as cfh:
-            site_gids = list(cfh.meta['gid'])
+            site_gids = list(cfh.meta['res_gid'])
 
         calc_aey = False
         if 'annual_energy' not in site_df:

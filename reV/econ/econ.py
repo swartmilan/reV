@@ -227,7 +227,7 @@ class Econ(Gen):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
-            site_data.index.name = 'gid'
+            site_data.index.name = 'res_gid'
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
@@ -240,14 +240,16 @@ class Econ(Gen):
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
 
-            if 'gid' not in site_data and site_data.index.name != 'gid':
+            check = ('res_gid' not in site_data
+                     and site_data.index.name != 'res_gid')
+            if check:
                 # require gid as column label or index
                 raise KeyError('Site data input must have "gid" column '
                                'to match reV site gid.')
 
-            if site_data.index.name != 'gid':
+            if site_data.index.name != 'res_gid':
                 # make gid the dataframe index if not already
-                site_data = site_data.set_index('gid', drop=True)
+                site_data = site_data.set_index('res_gid', drop=True)
 
         if 'offshore' in site_data:
             if site_data['offshore'].sum() > 1:
@@ -305,7 +307,7 @@ class Econ(Gen):
             with Outputs(self.cf_file) as cfh:
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
-                    cfh.meta['gid'].isin(self.points_control.sites)]
+                    cfh.meta['res_gid'].isin(self.points_control.sites)]
 
             if 'offshore' in self._meta:
                 if self._meta['offshore'].sum() > 1:
@@ -317,7 +319,7 @@ class Econ(Gen):
                     logger.warning(w)
 
         elif self._meta is None and self.cf_file is None:
-            self._meta = pd.DataFrame({'gid': self.points_control.sites})
+            self._meta = pd.DataFrame({'res_gid': self.points_control.sites})
 
         return self._meta
 
@@ -340,9 +342,10 @@ class Econ(Gen):
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
             Must have project_points with df property with all relevant
-            site-specific inputs and a 'gid' column. By passing site-specific
-            inputs in this dataframe, which was split using points_control,
-            only the data relevant to the current sites is passed.
+            site-specific inputs and a 'res_gid' column. By passing
+            site-specific inputs in this dataframe, which was split using
+            points_control, only the data relevant to the current sites is
+            passed.
         econ_fun : method
             reV_run() method from one of the econ modules (SingleOwner,
             SAM_LCOE, WindBos).
@@ -360,13 +363,13 @@ class Econ(Gen):
         site_df = pc.project_points.df
 
         # check that there is a gid column
-        if 'gid' not in site_df:
+        if 'res_gid' not in site_df:
             warn('Econ input "site_df" (in project_points.df) does not have '
                  'a label corresponding to site gid. This may cause an '
                  'incorrect interpretation of site id.')
         else:
             # extract site df from project points df and set gid as index
-            site_df = site_df.set_index('gid', drop=True)
+            site_df = site_df.set_index('res_gid', drop=True)
 
         # SAM execute econ analysis based on output request
         try:
@@ -450,7 +453,7 @@ class Econ(Gen):
                    output_request=output_request, fout=fout, dirout=dirout,
                    append=append)
 
-        diff = list(set(pc.sites) - set(econ.meta['gid'].values))
+        diff = list(set(pc.sites) - set(econ.meta['res_gid'].values))
         if diff:
             raise Exception('The following analysis sites were requested '
                             'through project points for econ but are not '

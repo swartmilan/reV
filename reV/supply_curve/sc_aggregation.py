@@ -470,7 +470,7 @@ class OffshoreAggregation:
                     raise SupplyCurveInputError(e)
 
                 # pylint: disable-msg=E1101
-                farm_gid = handler.gen.meta.loc[gen_gid, 'gid']
+                farm_gid = handler.gen.meta.loc[gen_gid, 'res_gid']
                 latitude = handler.gen.meta.loc[gen_gid, 'latitude']
                 longitude = handler.gen.meta.loc[gen_gid, 'longitude']
                 timezone = handler.gen.meta.loc[gen_gid, 'timezone']
@@ -483,7 +483,8 @@ class OffshoreAggregation:
                 lcoe = cls._get_means(lcoe_data, gen_gid)
                 res = cls._get_means(res_data, gen_gid)
 
-                pointsum = {'sc_point_gid': sc_points.loc[gen_gid, 'gid'],
+                pointsum = {'sc_point_gid': sc_points.loc[gen_gid,
+                                                          'sc_point_gid'],
                             'sc_row_ind': sc_points.loc[gen_gid, 'row_ind'],
                             'sc_col_ind': sc_points.loc[gen_gid, 'col_ind'],
                             'farm_gid': farm_gid,

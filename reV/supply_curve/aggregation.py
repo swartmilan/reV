@@ -571,8 +571,7 @@ class Aggregation(AbstractAggregation):
         with Resource(h5_fpath) as f:
             gen_index = f.meta
 
-        if 'gid' in gen_index:
-            gen_index = gen_index.rename(columns={'gid': 'res_gids'})
+        if 'res_gid' in gen_index:
             gen_index['gen_gids'] = gen_index.index
             gen_index = gen_index[['res_gids', 'gen_gids']]
             gen_index = gen_index.set_index(keys='res_gids')

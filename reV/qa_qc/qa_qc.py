@@ -6,6 +6,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd
+from warnings import warn
 
 from reV.qa_qc.summary import (SummarizeH5, SummarizeSupplyCurve, SummaryPlots,
                                SupplyCurvePlot, ExclusionsMask)
@@ -88,8 +89,16 @@ class QaQc:
             if file.endswith('.csv'):
                 summary_csv = os.path.join(self.out_dir, file)
                 summary = pd.read_csv(summary_csv)
-                if ('gid' in summary and 'latitude' in summary
-                        and 'longitude' in summary):
+                if 'gid' in summary:
+                    summary = summary.rename(columns={'gid': 'res_gid'})
+                    msg = ("'gid' will be depricated for 'res_gid' in v0.5 of "
+                           "reV")
+                    logger.warning(msg)
+                    warn(msg, DeprecationWarning)
+
+                check = ('res_gid' in summary and 'latitude' in summary
+                         and 'longitude' in summary)
+                if check:
                     QaQc._scatter_plot(summary_csv, self.out_dir,
                                        plot_type=plot_type, cmap=cmap,
                                        **kwargs)

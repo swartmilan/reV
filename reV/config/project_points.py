@@ -266,13 +266,14 @@ class ProjectPoints:
             names (keys) and values.
         """
 
-        site_bool = (self.df['gid'] == site)
+        site_bool = (self.df['res_gid'] == site)
         try:
             config_id = self.df.loc[site_bool, 'config'].values[0]
         except KeyError:
             raise KeyError('Site {} not found in this instance of '
                            'ProjectPoints. Available sites include: {}'
                            .format(site, self.sites))
+
         return config_id, self.sam_configs[config_id]
 
     def __repr__(self):
@@ -314,19 +315,25 @@ class ProjectPoints:
             raise ValueError('Cannot parse Project points data from {}'
                              .format(type(points)))
 
-        if ('gid' not in df.columns or 'config' not in df.columns):
+        if 'gid' in df:
+            df = df.rename(columns={'gid': 'res_gid'})
+            msg = "'gid' will be depricated for 'res_gid' in v0.5 of reV"
+            logger.warning(msg)
+            warn(msg, DeprecationWarning)
+
+        if ('res_gid' not in df.columns or 'config' not in df.columns):
             raise KeyError('Project points data must contain "gid" and '
                            '"config" column headers.')
 
-        gids = df['gid'].values
-        if not np.array_equal(np.sort(gids), gids):
+        res_gids = df['res_gid'].values
+        if not np.array_equal(np.sort(res_gids), res_gids):
             msg = ('WARNING: points are not in sequential order and will be '
                    'sorted! The original order is being preserved under '
                    'column "points_order"')
             logger.warning(msg)
             warn(msg)
             df['points_order'] = df.index.values
-            df = df.sort_values('gid').reset_index(drop=True)
+            df = df.sort_values('res_gid').reset_index(drop=True)
 
         return df
 
@@ -337,8 +344,8 @@ class ProjectPoints:
         Parameters
         ----------
         fname : str
-            Project points .csv file (with path). Must have 'gid' and 'config'
-            column names.
+            Project points .csv file (with path). Must have 'res_gid' and
+            'config' column names.
 
         Returns
         -------
@@ -371,10 +378,10 @@ class ProjectPoints:
         df : pd.DataFrame
             DataFrame mapping sites (gids) to SAM technology (config)
         """
-        df = pd.DataFrame(columns=['gid', 'config'])
+        df = pd.DataFrame(columns=['res_gid', 'config'])
         if isinstance(points, (list, tuple)):
             # explicit site list, set directly
-            df['gid'] = points
+            df['res_gid'] = points
         elif isinstance(points, slice):
             stop = points.stop
             if stop is None:
@@ -389,7 +396,7 @@ class ProjectPoints:
                 else:
                     stop = Resource(res_file).shape[1]
 
-            df['gid'] = list(range(*points.indices(stop)))
+            df['res_gid'] = list(range(*points.indices(stop)))
         else:
             raise TypeError('Project Points sites needs to be set as a list, '
                             'tuple, or slice, but was set as: {}'
@@ -399,27 +406,28 @@ class ProjectPoints:
 
         return df
 
-    def index(self, gid):
+    def index(self, res_gid):
         """Get the index location (iloc not loc) for a resource gid found in
         the project points.
 
         Parameters
         ----------
-        gid : int
+        res_gid : int
             Resource GID found in the project points gid column.
 
         Returns
         -------
         ind : int
-            Row index of gid in the project points dataframe.
+            Row index of res_gid in the project points dataframe.
         """
-        if gid not in self._df['gid'].values:
+        if res_gid not in self._df['res_gid'].values:
             e = ('Requested resource gid {} is not present in the project '
-                 'points dataframe. Cannot return row index.'.format(gid))
+                 'points dataframe. Cannot return row index.'.format(res_gid))
             logger.error(e)
             raise ConfigError(e)
 
-        ind = np.where(self._df['gid'] == gid)[0][0]
+        ind = np.where(self._df['res_gid'] == res_gid)[0][0]
+
         return ind
 
     @property
@@ -430,7 +438,7 @@ class ProjectPoints:
         -------
         _df : pd.DataFrame
             Table of sites and corresponding SAM configuration IDs.
-            Has columns 'gid' and 'config'.
+            Has columns 'res_gid' and 'config'.
         """
         return self._df
 
@@ -572,7 +580,7 @@ class ProjectPoints:
             List of sites belonging to this instance of ProjectPoints. The type
             is list if possible. Will be a slice only if slice stop is None.
         """
-        return self.df['gid'].values.tolist()
+        return self.df['res_gid'].values.tolist()
 
     @property
     def sites_as_slice(self):
@@ -687,8 +695,8 @@ class ProjectPoints:
         """
         return self._curtailment
 
-    def join_df(self, df2, key='gid'):
-        """Join new df2 to the _df attribute using the _df's gid as pkey.
+    def join_df(self, df2, key='res_gid'):
+        """Join new df2 to the _df attribute using the _df's res_gid as key.
 
         This can be used to add site-specific data to the project_points,
         taking advantage of the points_control iterator/split functions such
@@ -703,12 +711,13 @@ class ProjectPoints:
         key : str
             Primary key of df2 to be joined to the _df attribute (this
             instance of the project points dataframe). Primary key
-            of the self._df attribute is fixed as the gid column.
+            of the self._df attribute is fixed as the res_gid column.
         """
         # ensure df2 doesnt have any duplicate columns for suffix reasons.
         df2_cols = [c for c in df2.columns if c not in self._df or c == key]
-        self._df = pd.merge(self._df, df2[df2_cols], how='left', left_on='gid',
-                            right_on=key, copy=False, validate='1:1')
+        self._df = pd.merge(self._df, df2[df2_cols], how='left',
+                            left_on='res_gid', right_on=key, copy=False,
+                            validate='1:1')
 
     def get_sites_from_config(self, config):
         """Get a site list that corresponds to a config key.
@@ -725,7 +734,7 @@ class ProjectPoints:
             the configuration ID is not recognized, an empty list is returned.
         """
 
-        sites = self.df.loc[(self.df['config'] == config), 'gid'].values
+        sites = self.df.loc[(self.df['config'] == config), 'res_gid'].values
         return list(sites)
 
     @classmethod

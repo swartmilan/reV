@@ -738,7 +738,8 @@ class Gen:
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a 'gid' column is added.
+            non-sequential or do not start from 0, so a 'res_gid' column is
+            added.
         """
 
         if not self._multi_h5_res:
@@ -748,7 +749,7 @@ class Gen:
 
         with res_cls(self.res_file, hsds=self._hsds) as res:
             meta = res.meta.iloc[self.project_points.sites, :]
-            meta.loc[:, 'gid'] = self.project_points.sites
+            meta.loc[:, 'res_gid'] = self.project_points.sites
             meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
@@ -903,9 +904,9 @@ class Gen:
                     res_kwargs = {'hsds': hsds}
 
                 with res_cls(res_file, **res_kwargs) as f:
-                    if 'gid' in f.meta:
-                        gid0 = f.meta['gid'].values[0]
-                        gid1 = f.meta['gid'].values[-1]
+                    if 'res_gid' in f.meta:
+                        gid0 = f.meta['res_gid'].values[0]
+                        gid1 = f.meta['res_gid'].values[-1]
                         i0 = pp.index(gid0)
                         i1 = pp.index(gid1) + 1
                         pc = PointsControl.split(

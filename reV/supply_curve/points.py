@@ -1408,7 +1408,7 @@ class SupplyCurveExtent:
             self._points = pd.DataFrame({'row_ind': sc_row_ind.flatten(),
                                          'col_ind': sc_col_ind.flatten()})
 
-            self._points.index.name = 'gid'
+            self._points.index.name = 'sc_point_gid'
 
         return self._points
 

@@ -312,9 +312,9 @@ class Offshore:
 
                     if len(ilocs) > self._small_farm_limit:
                         meta_sub = self.meta_source_offshore.iloc[ilocs]
-                        agg_gids = str(meta_sub['gid'].values.tolist())
+                        agg_gids = str(meta_sub['res_gid'].values.tolist())
 
-                        mask = self.meta_source_offshore['gid'] == res_gid
+                        mask = self.meta_source_offshore['res_gid'] == res_gid
                         for k in misc.keys():
                             misc[k] = self.meta_source_offshore.loc[mask, k]\
                                 .values[0]
@@ -330,17 +330,17 @@ class Offshore:
 
             self._meta_out_offshore['elevation'] = 0.0
             self._meta_out_offshore['offshore'] = 1
-            self._meta_out_offshore['gid'] = new_offshore_gids
+            self._meta_out_offshore['res_gid'] = new_offshore_gids
             self._meta_out_offshore['offshore_res_gids'] = new_agg_gids
             self._meta_out_offshore['reV_tech'] = 'offshore_wind'
 
             self._meta_out_offshore = self._meta_out_offshore.dropna(
-                subset=['gid', 'offshore_res_gids'])
+                subset=['farm_gid', 'offshore_res_gids'])
 
             # Index must not be re-ordered because it corresponds to index in
             # self._offshore_data
             self._meta_out_offshore = \
-                self._meta_out_offshore.sort_values('gid')
+                self._meta_out_offshore.sort_values('farm_gid')
 
             # add additional columns from the offshore input data to the meta
             if self._offshore_meta_cols is not None:
@@ -361,13 +361,13 @@ class Offshore:
 
     @property
     def onshore_gids(self):
-        """Get a list of gids for the onshore sites."""
-        return self.meta_out_onshore['gid'].values.tolist()
+        """Get a list of resource gids for the onshore sites."""
+        return self.meta_out_onshore['res_gid'].values.tolist()
 
     @property
     def offshore_gids(self):
-        """Get a list of gids for the offshore sites."""
-        return self.meta_out_offshore['gid'].values.tolist()
+        """Get a list of resource gids for the offshore sites."""
+        return self.meta_out_offshore['res_gid'].values.tolist()
 
     @property
     def out(self):
@@ -457,7 +457,7 @@ class Offshore:
         """
 
         if any(self.offshore_gids):
-            offshore_bool = np.isin(self.meta_out['gid'].values,
+            offshore_bool = np.isin(self.meta_out['res_gid'].values,
                                     self.offshore_gids)
             offshore_locs = np.where(offshore_bool)[0]
             offshore_slice = slice(offshore_locs.min(),
@@ -639,7 +639,7 @@ class Offshore:
             dists = self._d[inds]
             ind_min = inds[np.argmin(dists)]
             res_site = self.meta_source_offshore.iloc[ind_min]
-            res_gid = res_site['gid']
+            res_gid = res_site['res_gid']
 
             farm_gid = self._offshore_data.iloc[ifarm][self._farm_gid_label]
             farm_gid = int(self._offshore_gid_adder + farm_gid)
