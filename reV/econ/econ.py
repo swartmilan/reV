@@ -240,6 +240,12 @@ class Econ(Gen):
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
 
+            if 'gid' in site_data:
+                site_data = site_data.rename(columns={'gid': 'res_gid'})
+                msg = "'gid' will be depricated for 'res_gid' in v0.5 of reV"
+                logger.warning(msg)
+                warn(msg, DeprecationWarning)
+
             check = ('res_gid' not in site_data
                      and site_data.index.name != 'res_gid')
             if check:

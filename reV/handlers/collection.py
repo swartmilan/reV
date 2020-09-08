@@ -416,7 +416,14 @@ class Collector:
             List of resource gids that are to be collected
         """
         if isinstance(project_points, str):
-            res_gids = pd.read_csv(project_points)['res_gid'].values
+            res_gids = pd.read_csv(project_points)
+            if 'gid' in res_gids:
+                res_gids = res_gids.rename(columns={'gid': 'res_gid'})
+                msg = "'gid' will be depricated for 'res_gid' in v0.5 of reV"
+                logger.warning(msg)
+                warn(msg, DeprecationWarning)
+
+            res_gids = res_gids['res_gids'].values
         elif isinstance(project_points, pd.DataFrame):
             res_gids = project_points['res_gid'].values
         elif isinstance(project_points, list):
