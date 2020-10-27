@@ -542,11 +542,12 @@ class Gen:
             if downscale is not None:
                 from rex.utilities.downscale import make_time_index
                 year = time_index.year[0]
-                time_index = make_time_index(year, downscale)
+                ds_freq = downscale['frequency']
+                time_index = make_time_index(year, ds_freq)
                 logger.info('reV solar generation running with temporal '
                             'downscaling frequency "{}" with final '
                             'time_index length {}'
-                            .format(downscale, len(time_index)))
+                            .format(ds_freq, len(time_index)))
             elif step is not None:
                 time_index = time_index[::2]
 
